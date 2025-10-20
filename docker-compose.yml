@@ -1,0 +1,53 @@
+services:
+  db:
+    image: mysql:8
+    container_name: tienda-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "1234"
+      MYSQL_DATABASE: "tienda"
+      MYSQL_USER: "tienda_user"
+      MYSQL_PASSWORD: "tienda_pass"
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  users-service:
+    build:
+      context: ./users
+      dockerfile: Dockerfile
+    container_name: users-service
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./users/.env
+    depends_on:
+      - db
+
+  products-service:
+    build:
+      context: ./products
+      dockerfile: Dockerfile
+    container_name: products-service
+    ports:
+      - "3002:3002"
+    env_file:
+      - ./products/.env
+    depends_on:
+      - db
+
+  orders-service:
+    build:
+      context: ./orders
+      dockerfile: Dockerfile
+    container_name: orders-service
+    ports:
+      - "3003:3003"
+    env_file:
+      - ./orders/.env
+    depends_on:
+      - db
+
+volumes:
+  db_data:

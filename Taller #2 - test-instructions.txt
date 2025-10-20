@@ -1,0 +1,340 @@
+Taller #2 - Sistemas Distribuidos
+
+Integrantes: Brayan Fabian Borda Quemba
+             Karina Lucero Alfonso Valderrama
+
+
+Guía de pruebas para los servicios en Postman
+
+Configuración Base
+-Base URL microservicio Users: http://localhost:3001
+-Base URL microservicio Products: http://localhost:3002
+-Base URL microservicio Orders: http://localhost:3003
+-Base de datos MySQL: localhost:3306
+-Docker: todos los servicios corriendo como contenedores
+-users-service -> puerto 3001
+-products-service -> puerto 3002
+-orders-service -> puerto 3003
+-tienda-db -> puerto 3306
+
+
+comandos Docker:
+
+Ver contenedores corriendo
+docker ps
+
+Ejecutar contenedores
+# Users service
+docker run -d -p 3001:3001 --name users-service <image-name>
+
+# Products service
+docker run -d -p 3002:3002 --name products-service <image-name>
+
+# Orders service
+docker run -d -p 3003:3003 --name orders-service <image-name>
+
+# Base de datos MySQL
+docker run -d -p 3306:3306 --name tienda-db -e MYSQL_ROOT_PASSWORD=1234 -e MYSQL_DATABASE=tienda mysql:8
+
+Entrar al contenedor MySQL
+docker exec -it tienda-db mysql -u root -p
+
+Detener un contenedor
+docker stop <container-name>
+
+Iniciar un contenedor detenido
+docker start <container-name>
+
+3️. Comandos para ejecutar los microservicios (Node/Express)
+# Instalar dependencias
+npm install
+
+# Ejecutar el servicio (cada microservicio)
+npm start
+
+
+puertos para cada servicio:
+
+Users: 3001
+
+Products: 3002
+
+Orders: 3003
+
+4️. Comandos para probar los servicios
+# Ver todas las tablas de la base de datos
+SHOW TABLES;
+
+# Ver la estructura de una tabla
+DESCRIBE usuarios;
+
+# Consultar datos de una tabla
+SELECT * FROM usuarios;
+SELECT * FROM productos;
+SELECT * FROM pedidos;
+SELECT * FROM detalle_pedidos;
+
+
+Para crear usuarios, productos y pedidos se usó Postman con los endpoints del servicio.
+
+
+Creación base de datos MySQL:
+
+# Acceder a MySQL dentro del contenedor
+docker exec -it tienda-db mysql -u root -p
+
+# Dentro de MySQL
+CREATE DATABASE tienda;
+
+# Usar la base de datos
+USE tienda;
+
+# Crear tabla usuarios
+CREATE TABLE usuarios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255),
+    lastName VARCHAR(255),
+    email VARCHAR(255),
+    password VARCHAR(255),
+    phone VARCHAR(15)
+);
+
+
+# Crear tabla productos
+CREATE TABLE productos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(255),
+    precio DECIMAL(10,2),
+    cantidad INT,
+    estado VARCHAR(255),
+    id_cat INT
+);
+
+
+# Crear tabla pedidos
+CREATE TABLE pedidos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT,
+    total DECIMAL(10,2),
+    fecha DATETIME
+);
+
+
+# Crear tabla detalle_pedidos
+CREATE TABLE detalle_pedidos (
+    id_pedido INT,
+    id_producto INT,
+    PRIMARY KEY (id_pedido, id_producto)
+);
+
+
+Servicios de Usuarios (USERS)
+
+1️. Crear un usuario
+
+URL: POST http://localhost:3001/users
+Body (JSON):
+
+{
+  "nombre": "Carlos",
+  "apellido": "Gomez",
+  "email": "carlos@mail.com",
+  "password": "pass123",
+  "phone": "3200000000"
+}
+
+
+nombre y apellido: datos del usuario.
+
+email: correo único del usuario.
+
+password: contraseña en texto plano (para prueba, luego puedes usar hash).
+
+phone: teléfono del usuario.
+
+2️. Validar usuario (login)
+
+URL: POST http://localhost:3001/users/validate
+Body (JSON):
+
+{
+  "email": "carlos@mail.com",
+  "password": "pass123"
+}
+
+
+Devuelve un objeto con la info del usuario si las credenciales son correctas.
+
+3️. Obtener todos los usuarios
+
+URL: GET http://localhost:3001/users
+
+Body: No necesita body.
+
+Devuelve un array con todos los usuarios.
+
+4️. Obtener un usuario por ID
+
+URL: GET http://localhost:3001/users/:id
+Ejemplo:
+GET http://localhost:3001/users/1
+
+Reemplaza 1 por el ID del usuario que quieras consultar.
+
+Body: No necesita body.
+
+5️. Eliminar un usuario
+
+URL: DELETE http://localhost:3001/users/:id
+Ejemplo:
+DELETE http://localhost:3001/users/1
+
+Borra el usuario con ID 1.
+
+Body: No necesita body.
+ 
+Servicios de Productos (PRODUCTS)
+
+1️. Crear un producto
+
+URL: POST http://localhost:3002/products
+Body (JSON):
+
+{
+  "nombre": "Camiseta",
+  "precio": 25.50,
+  "cantidad": 10,
+  "estado": "disponible",
+  "id_cat": 1
+}
+
+
+nombre: nombre del producto.
+
+precio: precio unitario.
+
+cantidad: cantidad en stock.
+
+estado: estado del producto (disponible, agotado, etc.).
+
+id_cat: ID de categoría (puedes poner cualquier número por ahora).
+
+2️. Obtener todos los productos
+
+URL: GET http://localhost:3002/products
+
+Body: No necesita body.
+
+Devuelve un array con todos los productos.
+
+3️. Obtener un producto por ID
+
+URL: GET http://localhost:3002/products/:id
+Ejemplo:
+GET http://localhost:3002/products/1
+
+Reemplaza 1 por el ID del producto que quieras consultar.
+
+Body: No necesita body.
+
+4️. Actualizar un producto
+
+URL: PUT http://localhost:3002/products/:id
+Ejemplo:
+PUT http://localhost:3002/products/1
+Body (JSON):
+
+{
+  "precio": 30.00,
+  "cantidad": 15
+}
+
+
+Solo incluye los campos que quieras actualizar.
+
+5️. Eliminar un producto
+
+URL: DELETE http://localhost:3002/products/:id
+Ejemplo:
+DELETE http://localhost:3002/products/1
+
+Borra el producto con ID 1
+Body: No necesita body.
+
+Servicios de Pedidos (Orders)
+
+Crear pedido
+
+1.Crear un pedido
+
+URL: POST http://localhost:3003/orders
+Body (JSON):
+
+{
+  "id_usuario": 1,
+  "total": 150.00,
+  "fecha": "2025-09-27T22:00:00.000Z",
+  "detalles": [
+    { "id_producto": 1 },
+    { "id_producto": 2 }
+  ]
+}
+
+
+id_usuario: el ID del usuario que hace el pedido.
+
+total: total del pedido.
+
+fecha: fecha del pedido (puedes poner la actual).
+
+detalles: array de productos que incluye el pedido (solo IDs de productos).
+
+2️.Obtener un pedido por ID
+
+URL: GET http://localhost:3003/orders/:id
+Ejemplo:
+GET http://localhost:3003/orders/1
+
+Reemplaza 1 por el ID del pedido que quieras ver.
+
+Body: No necesita body.
+
+3️.Obtener todos los pedidos de un usuario
+
+URL: GET http://localhost:3003/orders/user/:userId
+Ejemplo:
+GET http://localhost:3003/orders/user/1
+
+Reemplaza 1 por el ID del usuario.
+
+Devuelve todos los pedidos de ese usuario.
+
+Body: No necesita body.
+
+4️.Obtener los detalles de un pedido
+
+URL: GET http://localhost:3003/orders/details/:id
+Ejemplo:
+GET http://localhost:3003/orders/details/1
+
+Devuelve los productos dentro del pedido con ID 1.
+
+Body: No necesita body.
+
+5️.Eliminar un pedido
+
+URL: DELETE http://localhost:3003/orders/:id
+Ejemplo:
+DELETE http://localhost:3003/orders/1
+
+Borra el pedido con ID 1.
+
+Body: No necesita body.
+Nota importante:
+- Asegurarse de que todos los contenedores Docker estén corriendo (docker ps).
+
+- La base de datos tienda-db debe estar inicializada con tablas y datos de prueba.
+
+- Todos los servicios están conectados a la misma red de Docker, por lo que no es necesario cambiar IPs.
+
+- Para cambios en la base de datos o nuevas inserciones, reiniciar el contenedor de MySQL si es necesario.
